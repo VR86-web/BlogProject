@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
+from taggit.managers import TaggableManager
 
 
 class PublishedManager(models.Manager):
@@ -16,6 +17,8 @@ class Post(models.Model):
     class Status(models.TextChoices):
         DRAFT = 'DR', 'DRAFT'
         PUBLISHED = 'PB', 'PUBLISHED'
+
+    tags = TaggableManager()
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,

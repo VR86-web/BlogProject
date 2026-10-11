@@ -6,13 +6,32 @@ from django.views.generic import ListView
 
 from blogProject.blog.models import Post
 from blogProject.blog.forms import EmailPostForm, CommentForm
-
+from taggit.models import Tag
 
 class PostListView(ListView):
     queryset = Post.published.all()
     context_object_name = 'posts'
     paginate_by = 3
     template_name = 'blog/blog/list.html'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        tag_slug = self.kwargs.get('tag_slug')
+
+        if tag_slug:
+            tag = Tag.objects.get(slug=tag_slug)
+            queryset = queryset.filter(tags__in=[tag])
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tag_slug = self.kwargs.get('tag_slug')
+
+        if tag_slug:
+            context['tag'] = Tag.objects.get(slug=tag_slug)
+
+        return context
 
 
 def post_detail(request, year, month, day, post):
