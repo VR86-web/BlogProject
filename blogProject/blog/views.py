@@ -4,12 +4,13 @@ from django.core.mail import send_mail
 from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView
 from django.db.models import Count
+from django.db.models.functions import Greatest
 
 from blogProject.blog.models import Post
 from blogProject.blog.forms import EmailPostForm, CommentForm, SearchForm
 from taggit.models import Tag
 
-from django.contrib.postgres.search import TrigramSimilarity
+from django.contrib.postgres.search import TrigramSimilarity, TrigramWordSimilarity
 
 class PostListView(ListView):
     queryset = Post.published.all()
@@ -151,7 +152,10 @@ def post_search(request):
         if form.is_valid():
             query = form.cleaned_data['query']
             results = Post.published.annotate(
-                similarity=TrigramSimilarity('title', query)
+                similarity=Greatest(
+                    TrigramSimilarity('title', query),
+                    TrigramWordSimilarity(query, 'body'),
+                )
             ).filter(similarity__gte=0.1).order_by('-similarity')
 
     return render(
